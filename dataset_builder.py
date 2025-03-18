@@ -52,9 +52,52 @@ class DatasetHTTPHandler(SimpleHTTPRequestHandler):
             print(f"Error handling HTTP request: {e}")
             self.close_connection = True
 
+    def send_uncached_response(self, code, content_type, content):
+        """Helper method to send a response with cache-control headers."""
+        self.send_response(code)
+        self.send_header('Content-Type', content_type)
+        self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        self.end_headers()
+        
+        if isinstance(content, str):
+            self.wfile.write(content.encode('utf-8'))
+        elif isinstance(content, bytes):
+            self.wfile.write(content)
+        elif content is not None:
+            self.wfile.write(str(content).encode('utf-8'))
+    
     def do_GET(self):
         """Handle GET requests with better error handling."""
         try:
+            # Extract the path without query parameters
+            base_path = self.path.split('?')[0] if '?' in self.path else self.path
+            
+            # Handle ping request for restart detection
+            if '?ping=' in self.path:
+                self.send_uncached_response(200, 'text/plain', 'OK')
+                return
+            
+            # Ensure dataset_viewer.html gets served properly
+            if base_path == '/dataset_viewer.html':
+                try:
+                    html_path = Path(self.dataset_builder.output_dir) / 'dataset_viewer.html'
+                    if html_path.exists():
+                        with open(html_path, 'rb') as f:
+                            content = f.read()
+                            self.send_uncached_response(200, 'text/html', content)
+                            print(f"Served dataset_viewer.html")
+                    else:
+                        print(f"Warning: dataset_viewer.html not found at {html_path}")
+                        error_html = "<html><body><h1>Error: Dataset viewer not found</h1><p>Try restarting the server.</p></body></html>"
+                        self.send_uncached_response(404, 'text/html', error_html)
+                except Exception as e:
+                    print(f"Error serving dataset_viewer.html: {e}")
+                    self.send_uncached_response(500, 'text/html', "<html><body><h1>Error loading page</h1></body></html>")
+                return
+            
+            # For all other requests, use the standard handler
             super().do_GET()
         except BrokenPipeError:
             # Client disconnected, just ignore
@@ -80,37 +123,56 @@ class DatasetHTTPHandler(SimpleHTTPRequestHandler):
                     data = json.loads(post_data)
                     self.dataset_builder.dataset = data
                     self.dataset_builder._save_dataset()
-                    self.send_response(200)
-                    self.end_headers()
-                    self.wfile.write(b'{"status": "success"}')
+                    self.send_uncached_response(200, 'application/json', '{"status": "success"}')
                 except Exception as e:
                     print(f"Error saving data: {e}")
-                    self.send_response(500)
-                    self.end_headers()
-                    self.wfile.write(str(e).encode())
+                    error_data = json.dumps({
+                        'status': 'error',
+                        'message': str(e)
+                    })
+                    self.send_uncached_response(500, 'application/json', error_data)
             elif self.path == '/restart':
                 try:
+                    print("Received restart request from client...")
+                    
                     # Save any pending changes first
                     try:
                         data = json.loads(post_data)
                         self.dataset_builder.dataset = data
                         self.dataset_builder._save_dataset()
+                        print("Data saved during restart request")
                     except Exception as e:
                         print(f"Warning: Could not save data during restart: {e}")
                     
                     # Send success response before restarting
-                    self.send_response(200)
-                    self.end_headers()
-                    self.wfile.write(b'{"status": "success", "message": "Server restarting..."}')
+                    response_data = json.dumps({
+                        'status': 'success', 
+                        'message': 'Server restarting...'
+                    })
+                    self.send_uncached_response(200, 'application/json', response_data)
                     
                     # Create a restart flag file to signal to the main process
+                    # Make sure the flag is written and flushed to disk
                     restart_flag_file = Path(self.dataset_builder.output_dir) / ".restart_needed"
                     try:
                         with open(restart_flag_file, 'w') as f:
                             f.write(str(time.time()))
+                            f.flush()
+                            os.fsync(f.fileno())  # Ensure it's written to disk
                         print(f"Created restart flag file: {restart_flag_file}")
                     except Exception as e:
                         print(f"Warning: Could not create restart flag file: {e}")
+                    
+                    # Make sure the flag file exists
+                    if not restart_flag_file.exists():
+                        print("WARNING: Restart flag file was not created properly!")
+                        try:
+                            # Try one more time with a simpler approach
+                            with open(restart_flag_file, 'w') as f:
+                                f.write('restart')
+                            print("Retry creating restart flag succeeded")
+                        except:
+                            print("Failed to create restart flag file even on retry")
                     
                     # Schedule server shutdown
                     def shutdown_server():
@@ -118,7 +180,10 @@ class DatasetHTTPHandler(SimpleHTTPRequestHandler):
                             # Give time for the browser to receive the response
                             time.sleep(1)
                             print("Shutting down server for restart...")
-                            self.server.shutdown()
+                            # We don't want to call self.server.shutdown() directly
+                            # as it will block until the server is done serving requests
+                            # Instead, we'll use a thread to shutdown the server
+                            threading.Thread(target=self.server.shutdown, daemon=True).start()
                         except Exception as e:
                             print(f"Error during server shutdown: {e}")
                     
@@ -127,9 +192,50 @@ class DatasetHTTPHandler(SimpleHTTPRequestHandler):
                     shutdown_thread.start()
                 except Exception as e:
                     print(f"Error processing restart request: {e}")
-                    self.send_response(500)
-                    self.end_headers()
-                    self.wfile.write(f"Error: {str(e)}".encode())
+                    error_data = json.dumps({
+                        'status': 'error',
+                        'message': str(e)
+                    })
+                    self.send_uncached_response(500, 'application/json', error_data)
+            elif self.path == '/refresh':
+                try:
+                    print("Processing refresh request...")
+                    
+                    # First save the dataset to ensure we don't lose any changes
+                    try:
+                        if content_length > 0:
+                            data = json.loads(post_data)
+                            self.dataset_builder.dataset = data
+                            self.dataset_builder._save_dataset()
+                    except Exception as e:
+                        print(f"Warning: Could not save data during refresh: {e}")
+                    
+                    # Scan for images
+                    self.dataset_builder.scan_images()
+                    
+                    # Regenerate HTML to ensure it's up-to-date
+                    try:
+                        self.dataset_builder.generate_html()
+                    except Exception as e:
+                        print(f"Warning: Could not regenerate HTML during refresh: {e}")
+                    
+                    # Send the updated dataset as response
+                    response_data = json.dumps({
+                        'status': 'success',
+                        'items': self.dataset_builder.dataset['items'],
+                        'last_updated': self.dataset_builder.dataset['last_updated'],
+                        'message': f"Found {len(self.dataset_builder.dataset['items'])} items"
+                    })
+                    
+                    self.send_uncached_response(200, 'application/json', response_data)
+                    print(f"Refresh complete. Found {len(self.dataset_builder.dataset['items'])} items.")
+                except Exception as e:
+                    print(f"Error processing refresh request: {e}")
+                    error_data = json.dumps({
+                        'status': 'error',
+                        'message': str(e)
+                    })
+                    self.send_uncached_response(500, 'application/json', error_data)
             else:
                 self.send_response(404)
                 self.end_headers()
@@ -493,6 +599,15 @@ class DatasetBuilder:
             padding-bottom: 8px;
             border-bottom: 1px solid #eee;
         }
+        .highlight-new {
+            animation: highlight-fade 3s ease;
+            border-left: 3px solid #28a745;
+            padding-left: 10px;
+        }
+        @keyframes highlight-fade {
+            0% { background-color: rgba(40, 167, 69, 0.2); }
+            100% { background-color: transparent; }
+        }
         .btn {
             padding: 5px 10px;
             background-color: #4CAF50;
@@ -564,6 +679,18 @@ class DatasetBuilder:
         .btn-primary:hover {
             background-color: #0056b3;
         }
+        .btn-save {
+            background-color: #28a745;
+            font-size: 1.1em; 
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-save:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
         .btn-secondary {
             background-color: #6c757d;
             color: white;
@@ -631,7 +758,8 @@ class DatasetBuilder:
     <div class="header">
         <h1>Dataset Viewer</h1>
         <div class="header-buttons">
-            <button class="btn btn-primary" onclick="saveAllChanges()">Save Changes</button>
+            <button class="btn btn-primary btn-save" onclick="saveAllChanges()">💾 Save Changes</button>
+            <button class="btn btn-primary" onclick="refreshImages()" style="background-color: #17a2b8;">🔄 Refresh Images</button>
             <button class="btn btn-secondary" onclick="restartServer()">Restart Server</button>
         </div>
         <div id="status-message"></div>
@@ -654,6 +782,11 @@ class DatasetBuilder:
                 <!-- Shared attributes will be generated here -->
             </div>
             <button class="btn" onclick="addSharedAttribute()">Add Attribute</button>
+            <div class="attribute-control" style="margin-top: 20px;">
+                <p class="note" style="font-size: 0.9em; color: #666;">
+                    Note: After adding or editing attributes, click "Save Changes" at the top to save.
+                </p>
+            </div>
         </div>
         
         <div id="item-container" class="item-container">
@@ -668,6 +801,21 @@ class DatasetBuilder:
         
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded');
+            
+            // Clean the URL if it has query parameters
+            if (window.location.search && window.history && window.history.replaceState) {
+                try {
+                    // Get the base URL without query parameters
+                    const baseUrl = window.location.href.split('?')[0];
+                    console.log('Cleaning URL to:', baseUrl);
+                    window.history.replaceState({}, document.title, baseUrl);
+                } catch (e) {
+                    console.warn('Could not clean URL:', e);
+                }
+            }
+            
+            // Initialize the UI
             renderSharedAttributes();
             renderItems(dataset.items);
             updateLastUpdated();
@@ -702,9 +850,19 @@ class DatasetBuilder:
                 dataset.attributes = [];
             }
             
+            // Get all existing attribute names for duplicate checking
+            const existingAttrNames = dataset.attributes.map(attr => attr.name.toLowerCase());
+            
             dataset.attributes.forEach((attr, index) => {
                 const attrElem = document.createElement('div');
                 attrElem.className = 'shared-attribute-row';
+                
+                // Add highlight class for new attributes
+                if (attr.isNew) {
+                    attrElem.classList.add('highlight-new');
+                    // Remove the isNew flag after it's been rendered once
+                    setTimeout(() => { attr.isNew = false; }, 3000);
+                }
                 
                 // Special handling for 'ID' attribute
                 if (attr.name === 'ID') {
@@ -714,16 +872,87 @@ class DatasetBuilder:
                         </div>
                     `;
                 } else {
+                    const isNewLabel = attr.isNew ? '<span style="color: #28a745;"> (New - requires name)</span>' : '';
                     attrElem.innerHTML = `
-                        <label>Attribute Name:</label>
-                        <input type="text" class="attr-name" value="${attr.name}" placeholder="Attribute name">
+                        <label>Attribute Name${isNewLabel}:</label>
+                        <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                            <input type="text" class="attr-name" value="${attr.name}" placeholder="Attribute name" style="flex-grow: 1;">
+                            <button class="btn attr-save-btn" style="display: none;" onclick="saveAttribute(${index}, this)">Save</button>
+                        </div>
                         <label>Description (optional):</label>
                         <input type="text" class="attr-description" value="${attr.description || ''}" placeholder="Description">
                         <button class="btn btn-remove" onclick="removeSharedAttribute(${index})">Remove</button>
                     `;
+                    
+                    // Add event listeners to show/hide save button based on input
+                    setTimeout(() => {
+                        const nameInput = attrElem.querySelector('.attr-name');
+                        const saveBtn = attrElem.querySelector('.attr-save-btn');
+                        
+                        if (nameInput && saveBtn) {
+                            const updateSaveButton = () => {
+                                const name = nameInput.value.trim();
+                                const isDuplicate = existingAttrNames.filter(
+                                    (n, i) => n === name.toLowerCase() && i !== index
+                                ).length > 0;
+                                
+                                if (name && !isDuplicate) {
+                                    saveBtn.style.display = 'block';
+                                    nameInput.style.borderColor = '';
+                                } else if (isDuplicate) {
+                                    saveBtn.style.display = 'none';
+                                    nameInput.style.borderColor = 'red';
+                                    nameInput.title = 'Attribute name must be unique';
+                                } else {
+                                    saveBtn.style.display = 'none';
+                                    nameInput.style.borderColor = '';
+                                }
+                            };
+                            
+                            nameInput.addEventListener('input', updateSaveButton);
+                            updateSaveButton(); // Initial check
+                        }
+                    }, 0);
                 }
                 container.appendChild(attrElem);
             });
+        }
+        
+        function saveAttribute(index, button) {
+            const attrRow = button.closest('.shared-attribute-row');
+            const nameInput = attrRow.querySelector('.attr-name');
+            const descInput = attrRow.querySelector('.attr-description');
+            
+            if (nameInput && nameInput.value.trim()) {
+                const name = nameInput.value.trim();
+                const description = descInput ? descInput.value.trim() : '';
+                
+                // Update the attribute
+                dataset.attributes[index].name = name;
+                dataset.attributes[index].description = description;
+                
+                // Show feedback
+                button.textContent = '✓ Saved';
+                button.style.backgroundColor = '#28a745';
+                setTimeout(() => {
+                    button.textContent = 'Save';
+                    button.style.backgroundColor = '';
+                }, 1000);
+                
+                // Update items with the new attribute
+                dataset.items.forEach(item => {
+                    if (!item.attribute_values) {
+                        item.attribute_values = {};
+                    }
+                    // If this attribute didn't exist before in this item, initialize it
+                    if (!(name in item.attribute_values)) {
+                        item.attribute_values[name] = '';
+                    }
+                });
+                
+                // Re-render the items to show the new attribute
+                renderItems(filteredItems);
+            }
         }
         
         function addSharedAttribute() {
@@ -731,13 +960,15 @@ class DatasetBuilder:
                 dataset.attributes = [];
             }
             
-            // Add new attribute after the 'ID' attribute
+            // Add new attribute after the 'ID' attribute with a flag for highlighting
             dataset.attributes.splice(1, 0, {
                 name: "",
-                description: ""
+                description: "",
+                isNew: true
             });
             
             renderSharedAttributes();
+            showStatus('Attribute added! Fill in the name and click "Save Changes" to save.', 'info');
         }
         
         function removeSharedAttribute(index) {
@@ -842,6 +1073,14 @@ class DatasetBuilder:
                         name: nameInput.value.trim(),
                         description: descInput ? descInput.value.trim() : ''
                     });
+                } else if (nameInput && !nameInput.value.trim() && nameInput.parentNode) {
+                    // Visual indication that empty attributes will be removed
+                    nameInput.style.borderColor = 'red';
+                    nameInput.placeholder = 'Required - will be removed if empty';
+                    setTimeout(() => {
+                        nameInput.style.borderColor = '';
+                        nameInput.placeholder = 'Attribute name';
+                    }, 3000);
                 }
             });
             
@@ -913,28 +1152,102 @@ class DatasetBuilder:
                 return;
             }
             
-            showStatus('Restarting server...', 'info');
+            showStatus('Saving changes and preparing to restart server...', 'info');
             
             try {
+                // First, save all changes
+                await new Promise((resolve, reject) => {
+                    try {
+                        // Update shared attributes
+                        const sharedAttrElems = document.querySelectorAll('#sharedAttributes .shared-attribute-row');
+                        const idAttribute = dataset.attributes.find(attr => attr.name === 'ID');
+                        dataset.attributes = [idAttribute]; // Keep the ID attribute
+                        
+                        // Add other attributes
+                        sharedAttrElems.forEach(elem => {
+                            const nameInput = elem.querySelector('.attr-name');
+                            const descInput = elem.querySelector('.attr-description');
+                            if (nameInput && nameInput.value.trim() && nameInput.value.trim() !== 'ID') {
+                                dataset.attributes.push({
+                                    name: nameInput.value.trim(),
+                                    description: descInput ? descInput.value.trim() : ''
+                                });
+                            }
+                        });
+                        
+                        // Update timestamp
+                        dataset.last_updated = new Date().toISOString();
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+                
+                // Send restart request with saved data
+                showStatus('Sending restart request to server...', 'info');
+                
                 const response = await fetch('/restart', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dataset)
                 });
                 
-                if (!response.ok) throw new Error('Failed to restart');
+                if (!response.ok) {
+                    throw new Error('Server returned ' + response.status);
+                }
                 
-                // Wait a moment for the server to restart
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
+                // Show the restart message
+                showStatus('Server is restarting. Please wait...', 'info');
+                
+                // Create a simple countdown for UX
+                let countdown = 10;
+                const countdownTimer = setInterval(() => {
+                    showStatus(`Server is restarting. Reloading in ${countdown} seconds...`, 'info');
+                    countdown--;
+                    if (countdown <= 0) {
+                        clearInterval(countdownTimer);
+                        showStatus('Reloading page now...', 'info');
+                        
+                        // Force reload after countdown
+                        window.location.href = window.location.href.split('?')[0];
+                    }
+                }, 1000);
+                
+                // Start auto-reload attempts after a few seconds
+                setTimeout(function attemptReload() {
+                    fetch(window.location.href.split('?')[0] + '?ping=' + Date.now(), {
+                        method: 'HEAD',
+                        cache: 'no-cache'
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            clearInterval(countdownTimer);
+                            showStatus('Server is back online! Reloading page...', 'info');
+                            setTimeout(() => {
+                                window.location.href = window.location.href.split('?')[0];
+                            }, 500);
+                        } else {
+                            // Try again in a second if we haven't reached the countdown
+                            if (countdown > 0) {
+                                setTimeout(attemptReload, 1000);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        // Server still restarting, try again in a second if we haven't reached the countdown
+                        if (countdown > 0) {
+                            setTimeout(attemptReload, 1000);
+                        }
+                    });
+                }, 3000); // Start checking after 3 seconds
             } catch (error) {
-                // If we get an error, it might mean the server is restarting
+                showStatus('Error during restart: ' + error.message, 'error');
+                console.error('Restart error:', error);
+                
+                // Still try to reload after a longer delay
                 setTimeout(() => {
-                    location.reload();
-                }, 2000);
+                    window.location.href = window.location.href.split('?')[0];
+                }, 10000);
             }
         }
         
@@ -988,6 +1301,54 @@ class DatasetBuilder:
             filteredItems = [...dataset.items];
             renderItems(filteredItems);
             updateItemCount();
+        }
+        
+        async function refreshImages() {
+            if (!confirm('This will scan for new images and refresh the dataset. Continue?')) {
+                return;
+            }
+            
+            showStatus('Refreshing images...', 'info');
+            
+            try {
+                // First save any current changes
+                await fetch('/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataset)
+                });
+                
+                // Then request a refresh
+                const response = await fetch('/refresh', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.status !== 'success') {
+                    throw new Error(data.message || 'Unknown error');
+                }
+                
+                // Update the dataset with the refreshed data
+                dataset.items = data.items;
+                dataset.last_updated = data.last_updated;
+                
+                // Refresh the UI
+                filteredItems = [...dataset.items];
+                renderItems(filteredItems);
+                updateLastUpdated();
+                updateItemCount();
+                
+                showStatus(`Refresh complete! Found ${data.items.length} images.`, 'info');
+            } catch (error) {
+                console.error('Refresh error:', error);
+                showStatus('Error refreshing images: ' + error.message, 'error');
+            }
         }
     </script>
 </body>
@@ -1086,17 +1447,34 @@ class DatasetBuilder:
                         except Exception as e:
                             print(f"Warning: Error generating HTML during restart: {e}")
                         
-                        # Remove the flag file
-                        restart_flag_file.unlink()
+                        # DO NOT remove the flag file yet - we need it to persist
+                        # until the server has fully shut down and detected the need to restart
+                        print("Server will restart after shutdown...")
                         
                         # Signal the server to shutdown and restart
-                        print("Restarting server...")
-                        if httpd:
-                            httpd.shutdown()
-                        break
+                        print("Triggering server shutdown for restart...")
+                        
+                        # Instead of directly calling httpd.shutdown(), we'll post a message
+                        # to the main thread using a timer with a small delay
+                        def trigger_shutdown():
+                            if httpd:
+                                try:
+                                    print("Executing server shutdown for restart")
+                                    httpd.shutdown()
+                                except Exception as e:
+                                    print(f"Error during shutdown for restart: {e}")
+                        
+                        # Use a timer with a small delay to allow this thread to finish first
+                        restart_timer = threading.Timer(0.5, trigger_shutdown)
+                        restart_timer.daemon = True
+                        restart_timer.start()
+                        
+                        # Exit this thread
+                        return
                 except Exception as e:
                     print(f"Error checking restart flag: {e}")
-                    
+                
+                # Check less frequently to reduce CPU usage
                 time.sleep(check_restart_interval)
         
         while True:
@@ -1111,14 +1489,31 @@ class DatasetBuilder:
                 retry_delay = 1  # Reset retry delay on successful start
                 httpd.serve_forever()
                 
-                # If we get here, the server has been shutdown, check if it's for a restart
-                if restart_flag_file.exists() or restart_flag_file.exists():
-                    print("Server shutting down for restart...")
-                    time.sleep(1)  # Brief pause before restarting
+                # If we get here, the server has been shutdown
+                print("Server has shutdown. Checking if restart is needed...")
+                
+                # Check if restart flag exists - if it does, this is a restart request
+                restart_requested = restart_flag_file.exists()
+                
+                if restart_requested:
+                    print("Restart flag found. Server will restart...")
+                    
+                    # Remove the flag file now that we've detected the restart request
+                    try:
+                        restart_flag_file.unlink()
+                        print("Restart flag file removed after shutdown")
+                    except Exception as e:
+                        print(f"Warning: Could not remove restart flag file: {e}")
+                    
+                    # Brief pause before restarting
+                    time.sleep(1)
+                    
                     # Continue the loop to restart the server
+                    print("Restarting server...")
                     continue
                 else:
                     # Normal shutdown
+                    print("No restart flag found. Normal shutdown detected. Exiting server.")
                     break
             except OSError as e:
                 if e.errno == 98 or e.errno == 10048:  # Address already in use (Linux/Windows)

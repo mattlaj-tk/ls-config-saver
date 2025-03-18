@@ -107,6 +107,15 @@
             padding-bottom: 8px;
             border-bottom: 1px solid #eee;
         }
+        .highlight-new {
+            animation: highlight-fade 3s ease;
+            border-left: 3px solid #28a745;
+            padding-left: 10px;
+        }
+        @keyframes highlight-fade {
+            0% { background-color: rgba(40, 167, 69, 0.2); }
+            100% { background-color: transparent; }
+        }
         .btn {
             padding: 5px 10px;
             background-color: #4CAF50;
@@ -178,6 +187,18 @@
         .btn-primary:hover {
             background-color: #0056b3;
         }
+        .btn-save {
+            background-color: #28a745;
+            font-size: 1.1em; 
+            padding: 10px 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        .btn-save:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
         .btn-secondary {
             background-color: #6c757d;
             color: white;
@@ -245,7 +266,8 @@
     <div class="header">
         <h1>Dataset Viewer</h1>
         <div class="header-buttons">
-            <button class="btn btn-primary" onclick="saveAllChanges()">Save Changes</button>
+            <button class="btn btn-primary btn-save" onclick="saveAllChanges()">💾 Save Changes</button>
+            <button class="btn btn-primary" onclick="refreshImages()" style="background-color: #17a2b8;">🔄 Refresh Images</button>
             <button class="btn btn-secondary" onclick="restartServer()">Restart Server</button>
         </div>
         <div id="status-message"></div>
@@ -268,6 +290,11 @@
                 <!-- Shared attributes will be generated here -->
             </div>
             <button class="btn" onclick="addSharedAttribute()">Add Attribute</button>
+            <div class="attribute-control" style="margin-top: 20px;">
+                <p class="note" style="font-size: 0.9em; color: #666;">
+                    Note: After adding or editing attributes, click "Save Changes" at the top to save.
+                </p>
+            </div>
         </div>
         
         <div id="item-container" class="item-container">
@@ -277,11 +304,26 @@
 
     <script>
         // Dataset
-        const dataset = {"items": [{"id": "c6cb8d05-fe08-4aa1-91b5-687ffbfc9add", "image": "images/c6cb8d05-fe08-4aa1-91b5-687ffbfc9add.png", "attribute_values": {"ID": "c6cb8d05-fe08-4aa1-91b5-687ffbfc9add"}, "notes": ""}, {"id": "4386fc56-3800-4e70-aa37-70a228f880cb", "image": "images/4386fc56-3800-4e70-aa37-70a228f880cb.png", "attribute_values": {"ID": "4386fc56-3800-4e70-aa37-70a228f880cb"}, "notes": ""}], "attributes": [{"name": "ID", "description": "", "readonly": true}], "last_updated": "2025-03-18T10:39:33.792524"};
+        const dataset = {"items": [{"id": "c6cb8d05-fe08-4aa1-91b5-687ffbfc9add", "image": "images/c6cb8d05-fe08-4aa1-91b5-687ffbfc9add.png", "attribute_values": {"ID": "c6cb8d05-fe08-4aa1-91b5-687ffbfc9add", "shape": "L", "ottomans": "1", "deep": "false", "orientation": "LHF"}, "notes": ""}, {"id": "4386fc56-3800-4e70-aa37-70a228f880cb", "image": "images/4386fc56-3800-4e70-aa37-70a228f880cb.png", "attribute_values": {"ID": "4386fc56-3800-4e70-aa37-70a228f880cb", "shape": "straight", "ottomans": "0", "deep": "false", "orientation": ""}, "notes": ""}, {"id": "7f1517c9-99ca-47d0-b326-eaa7409eea65", "image": "images/7f1517c9-99ca-47d0-b326-eaa7409eea65.png", "attribute_values": {"ID": "7f1517c9-99ca-47d0-b326-eaa7409eea65", "orientation": "", "deep": "false", "ottomans": "0", "shape": "straight"}, "notes": ""}, {"id": "9257fbf4-152a-41d7-b960-15c21b49ab86", "image": "images/9257fbf4-152a-41d7-b960-15c21b49ab86.png", "attribute_values": {"ID": "9257fbf4-152a-41d7-b960-15c21b49ab86", "orientation": "LHF", "deep": "false", "ottomans": "1", "shape": "L"}, "notes": ""}, {"id": "d3497daa-556d-48c5-ad59-37dc36332d17", "image": "images/d3497daa-556d-48c5-ad59-37dc36332d17.png", "attribute_values": {"ID": "d3497daa-556d-48c5-ad59-37dc36332d17", "orientation": "", "deep": "false", "ottomans": "2", "shape": "straight"}, "notes": ""}, {"id": "1db2266f-d479-46ae-8bd6-941c0a13427e", "image": "images/1db2266f-d479-46ae-8bd6-941c0a13427e.png", "attribute_values": {"ID": "1db2266f-d479-46ae-8bd6-941c0a13427e", "orientation": "RHF", "deep": "false", "ottomans": "1", "shape": "L"}, "notes": ""}, {"id": "652bc256-8736-46d5-9344-b448c69b1be8", "image": "images/652bc256-8736-46d5-9344-b448c69b1be8.png", "attribute_values": {"ID": "652bc256-8736-46d5-9344-b448c69b1be8", "orientation": "", "deep": "false", "ottomans": "0", "shape": "straight"}, "notes": ""}, {"id": "ee18cd8c-6cc3-46cc-a7b2-38bfad62012e", "image": "images/ee18cd8c-6cc3-46cc-a7b2-38bfad62012e.png", "attribute_values": {"ID": "ee18cd8c-6cc3-46cc-a7b2-38bfad62012e", "orientation": "LHF", "deep": "false", "ottomans": "1", "shape": "L"}, "notes": ""}, {"id": "e3319f2a-bd0e-4a14-b1f3-9e6c2de70237", "image": "images/e3319f2a-bd0e-4a14-b1f3-9e6c2de70237.png", "attribute_values": {"ID": "e3319f2a-bd0e-4a14-b1f3-9e6c2de70237", "orientation": "RHF", "deep": "false", "ottomans": "1", "shape": "L"}, "notes": ""}, {"id": "b8eb4207-79c3-496c-8d6e-7115f548bb92", "image": "images/b8eb4207-79c3-496c-8d6e-7115f548bb92.png", "attribute_values": {"ID": "b8eb4207-79c3-496c-8d6e-7115f548bb92", "orientation": "RHF", "deep": "false", "ottomans": "1", "shape": "L"}, "notes": ""}, {"id": "97c554bb-05d4-4748-9c24-eefe8cca729d", "image": "images/97c554bb-05d4-4748-9c24-eefe8cca729d.png", "attribute_values": {"ID": "97c554bb-05d4-4748-9c24-eefe8cca729d", "orientation": "LHF", "deep": "true", "ottomans": "1", "shape": "L"}, "notes": ""}, {"id": "7003c9af-9898-4745-b9b1-dba3a1bc61b7", "image": "images/7003c9af-9898-4745-b9b1-dba3a1bc61b7.png", "attribute_values": {"ID": "7003c9af-9898-4745-b9b1-dba3a1bc61b7", "orientation": "RHF", "deep": "true", "ottomans": "1", "shape": "L"}, "notes": ""}, {"id": "e9385c58-e47f-4c13-8547-5d2858f7a758", "image": "images/e9385c58-e47f-4c13-8547-5d2858f7a758.png", "attribute_values": {"ID": "e9385c58-e47f-4c13-8547-5d2858f7a758", "orientation": "LHF", "deep": "true", "ottomans": "2", "shape": "L"}, "notes": ""}, {"id": "bc3b3629-05db-47d9-aa9d-41c0341d6085", "image": "images/bc3b3629-05db-47d9-aa9d-41c0341d6085.png", "attribute_values": {"ID": "bc3b3629-05db-47d9-aa9d-41c0341d6085", "orientation": "", "deep": "true", "ottomans": "0", "shape": "straight"}, "notes": ""}, {"id": "f77ff39a-62c9-40fc-9d12-9899e2d332a0", "image": "images/f77ff39a-62c9-40fc-9d12-9899e2d332a0.png", "attribute_values": {"ID": "f77ff39a-62c9-40fc-9d12-9899e2d332a0", "orientation": "", "deep": "true", "ottomans": "0", "shape": "straight"}, "notes": ""}, {"id": "8deba121-4429-4b8b-b260-c5afd6947407", "image": "images/8deba121-4429-4b8b-b260-c5afd6947407.png", "attribute_values": {"ID": "8deba121-4429-4b8b-b260-c5afd6947407", "orientation": "RHF", "deep": "true", "ottomans": "2", "shape": "L"}, "notes": ""}, {"id": "cca78197-1784-45f5-84c6-9caf3b90c5dd", "image": "images/cca78197-1784-45f5-84c6-9caf3b90c5dd.png", "attribute_values": {"ID": "cca78197-1784-45f5-84c6-9caf3b90c5dd", "orientation": "", "deep": "true", "ottomans": "0", "shape": "straight"}, "notes": ""}], "attributes": [{"name": "ID", "description": "", "readonly": true}, {"name": "orientation", "description": ""}, {"name": "deep", "description": ""}, {"name": "ottomans", "description": ""}, {"name": "shape", "description": ""}], "last_updated": "2025-03-18T11:21:18.082146", "_restartTimestamp": 1742310719040};
         let filteredItems = [...dataset.items];
         
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded');
+            
+            // Clean the URL if it has query parameters
+            if (window.location.search && window.history && window.history.replaceState) {
+                try {
+                    // Get the base URL without query parameters
+                    const baseUrl = window.location.href.split('?')[0];
+                    console.log('Cleaning URL to:', baseUrl);
+                    window.history.replaceState({}, document.title, baseUrl);
+                } catch (e) {
+                    console.warn('Could not clean URL:', e);
+                }
+            }
+            
+            // Initialize the UI
             renderSharedAttributes();
             renderItems(dataset.items);
             updateLastUpdated();
@@ -316,9 +358,19 @@
                 dataset.attributes = [];
             }
             
+            // Get all existing attribute names for duplicate checking
+            const existingAttrNames = dataset.attributes.map(attr => attr.name.toLowerCase());
+            
             dataset.attributes.forEach((attr, index) => {
                 const attrElem = document.createElement('div');
                 attrElem.className = 'shared-attribute-row';
+                
+                // Add highlight class for new attributes
+                if (attr.isNew) {
+                    attrElem.classList.add('highlight-new');
+                    // Remove the isNew flag after it's been rendered once
+                    setTimeout(() => { attr.isNew = false; }, 3000);
+                }
                 
                 // Special handling for 'ID' attribute
                 if (attr.name === 'ID') {
@@ -328,16 +380,87 @@
                         </div>
                     `;
                 } else {
+                    const isNewLabel = attr.isNew ? '<span style="color: #28a745;"> (New - requires name)</span>' : '';
                     attrElem.innerHTML = `
-                        <label>Attribute Name:</label>
-                        <input type="text" class="attr-name" value="${attr.name}" placeholder="Attribute name">
+                        <label>Attribute Name${isNewLabel}:</label>
+                        <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                            <input type="text" class="attr-name" value="${attr.name}" placeholder="Attribute name" style="flex-grow: 1;">
+                            <button class="btn attr-save-btn" style="display: none;" onclick="saveAttribute(${index}, this)">Save</button>
+                        </div>
                         <label>Description (optional):</label>
                         <input type="text" class="attr-description" value="${attr.description || ''}" placeholder="Description">
                         <button class="btn btn-remove" onclick="removeSharedAttribute(${index})">Remove</button>
                     `;
+                    
+                    // Add event listeners to show/hide save button based on input
+                    setTimeout(() => {
+                        const nameInput = attrElem.querySelector('.attr-name');
+                        const saveBtn = attrElem.querySelector('.attr-save-btn');
+                        
+                        if (nameInput && saveBtn) {
+                            const updateSaveButton = () => {
+                                const name = nameInput.value.trim();
+                                const isDuplicate = existingAttrNames.filter(
+                                    (n, i) => n === name.toLowerCase() && i !== index
+                                ).length > 0;
+                                
+                                if (name && !isDuplicate) {
+                                    saveBtn.style.display = 'block';
+                                    nameInput.style.borderColor = '';
+                                } else if (isDuplicate) {
+                                    saveBtn.style.display = 'none';
+                                    nameInput.style.borderColor = 'red';
+                                    nameInput.title = 'Attribute name must be unique';
+                                } else {
+                                    saveBtn.style.display = 'none';
+                                    nameInput.style.borderColor = '';
+                                }
+                            };
+                            
+                            nameInput.addEventListener('input', updateSaveButton);
+                            updateSaveButton(); // Initial check
+                        }
+                    }, 0);
                 }
                 container.appendChild(attrElem);
             });
+        }
+        
+        function saveAttribute(index, button) {
+            const attrRow = button.closest('.shared-attribute-row');
+            const nameInput = attrRow.querySelector('.attr-name');
+            const descInput = attrRow.querySelector('.attr-description');
+            
+            if (nameInput && nameInput.value.trim()) {
+                const name = nameInput.value.trim();
+                const description = descInput ? descInput.value.trim() : '';
+                
+                // Update the attribute
+                dataset.attributes[index].name = name;
+                dataset.attributes[index].description = description;
+                
+                // Show feedback
+                button.textContent = '✓ Saved';
+                button.style.backgroundColor = '#28a745';
+                setTimeout(() => {
+                    button.textContent = 'Save';
+                    button.style.backgroundColor = '';
+                }, 1000);
+                
+                // Update items with the new attribute
+                dataset.items.forEach(item => {
+                    if (!item.attribute_values) {
+                        item.attribute_values = {};
+                    }
+                    // If this attribute didn't exist before in this item, initialize it
+                    if (!(name in item.attribute_values)) {
+                        item.attribute_values[name] = '';
+                    }
+                });
+                
+                // Re-render the items to show the new attribute
+                renderItems(filteredItems);
+            }
         }
         
         function addSharedAttribute() {
@@ -345,13 +468,15 @@
                 dataset.attributes = [];
             }
             
-            // Add new attribute after the 'ID' attribute
+            // Add new attribute after the 'ID' attribute with a flag for highlighting
             dataset.attributes.splice(1, 0, {
                 name: "",
-                description: ""
+                description: "",
+                isNew: true
             });
             
             renderSharedAttributes();
+            showStatus('Attribute added! Fill in the name and click "Save Changes" to save.', 'info');
         }
         
         function removeSharedAttribute(index) {
@@ -456,6 +581,14 @@
                         name: nameInput.value.trim(),
                         description: descInput ? descInput.value.trim() : ''
                     });
+                } else if (nameInput && !nameInput.value.trim() && nameInput.parentNode) {
+                    // Visual indication that empty attributes will be removed
+                    nameInput.style.borderColor = 'red';
+                    nameInput.placeholder = 'Required - will be removed if empty';
+                    setTimeout(() => {
+                        nameInput.style.borderColor = '';
+                        nameInput.placeholder = 'Attribute name';
+                    }, 3000);
                 }
             });
             
@@ -527,28 +660,102 @@
                 return;
             }
             
-            showStatus('Restarting server...', 'info');
+            showStatus('Saving changes and preparing to restart server...', 'info');
             
             try {
+                // First, save all changes
+                await new Promise((resolve, reject) => {
+                    try {
+                        // Update shared attributes
+                        const sharedAttrElems = document.querySelectorAll('#sharedAttributes .shared-attribute-row');
+                        const idAttribute = dataset.attributes.find(attr => attr.name === 'ID');
+                        dataset.attributes = [idAttribute]; // Keep the ID attribute
+                        
+                        // Add other attributes
+                        sharedAttrElems.forEach(elem => {
+                            const nameInput = elem.querySelector('.attr-name');
+                            const descInput = elem.querySelector('.attr-description');
+                            if (nameInput && nameInput.value.trim() && nameInput.value.trim() !== 'ID') {
+                                dataset.attributes.push({
+                                    name: nameInput.value.trim(),
+                                    description: descInput ? descInput.value.trim() : ''
+                                });
+                            }
+                        });
+                        
+                        // Update timestamp
+                        dataset.last_updated = new Date().toISOString();
+                        resolve();
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+                
+                // Send restart request with saved data
+                showStatus('Sending restart request to server...', 'info');
+                
                 const response = await fetch('/restart', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(dataset)
                 });
                 
-                if (!response.ok) throw new Error('Failed to restart');
+                if (!response.ok) {
+                    throw new Error('Server returned ' + response.status);
+                }
                 
-                // Wait a moment for the server to restart
-                setTimeout(() => {
-                    location.reload();
-                }, 2000);
+                // Show the restart message
+                showStatus('Server is restarting. Please wait...', 'info');
+                
+                // Create a simple countdown for UX
+                let countdown = 10;
+                const countdownTimer = setInterval(() => {
+                    showStatus(`Server is restarting. Reloading in ${countdown} seconds...`, 'info');
+                    countdown--;
+                    if (countdown <= 0) {
+                        clearInterval(countdownTimer);
+                        showStatus('Reloading page now...', 'info');
+                        
+                        // Force reload after countdown
+                        window.location.href = window.location.href.split('?')[0];
+                    }
+                }, 1000);
+                
+                // Start auto-reload attempts after a few seconds
+                setTimeout(function attemptReload() {
+                    fetch(window.location.href.split('?')[0] + '?ping=' + Date.now(), {
+                        method: 'HEAD',
+                        cache: 'no-cache'
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            clearInterval(countdownTimer);
+                            showStatus('Server is back online! Reloading page...', 'info');
+                            setTimeout(() => {
+                                window.location.href = window.location.href.split('?')[0];
+                            }, 500);
+                        } else {
+                            // Try again in a second if we haven't reached the countdown
+                            if (countdown > 0) {
+                                setTimeout(attemptReload, 1000);
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        // Server still restarting, try again in a second if we haven't reached the countdown
+                        if (countdown > 0) {
+                            setTimeout(attemptReload, 1000);
+                        }
+                    });
+                }, 3000); // Start checking after 3 seconds
             } catch (error) {
-                // If we get an error, it might mean the server is restarting
+                showStatus('Error during restart: ' + error.message, 'error');
+                console.error('Restart error:', error);
+                
+                // Still try to reload after a longer delay
                 setTimeout(() => {
-                    location.reload();
-                }, 2000);
+                    window.location.href = window.location.href.split('?')[0];
+                }, 10000);
             }
         }
         
@@ -602,6 +809,54 @@
             filteredItems = [...dataset.items];
             renderItems(filteredItems);
             updateItemCount();
+        }
+        
+        async function refreshImages() {
+            if (!confirm('This will scan for new images and refresh the dataset. Continue?')) {
+                return;
+            }
+            
+            showStatus('Refreshing images...', 'info');
+            
+            try {
+                // First save any current changes
+                await fetch('/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dataset)
+                });
+                
+                // Then request a refresh
+                const response = await fetch('/refresh', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.status !== 'success') {
+                    throw new Error(data.message || 'Unknown error');
+                }
+                
+                // Update the dataset with the refreshed data
+                dataset.items = data.items;
+                dataset.last_updated = data.last_updated;
+                
+                // Refresh the UI
+                filteredItems = [...dataset.items];
+                renderItems(filteredItems);
+                updateLastUpdated();
+                updateItemCount();
+                
+                showStatus(`Refresh complete! Found ${data.items.length} images.`, 'info');
+            } catch (error) {
+                console.error('Refresh error:', error);
+                showStatus('Error refreshing images: ' + error.message, 'error');
+            }
         }
     </script>
 </body>

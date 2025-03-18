@@ -4,7 +4,11 @@
       "id": "c6cb8d05-fe08-4aa1-91b5-687ffbfc9add",
       "image": "images/c6cb8d05-fe08-4aa1-91b5-687ffbfc9add.png",
       "attribute_values": {
-        "ID": "c6cb8d05-fe08-4aa1-91b5-687ffbfc9add"
+        "ID": "c6cb8d05-fe08-4aa1-91b5-687ffbfc9add",
+        "shape": "L",
+        "ottomans": "1",
+        "deep": "false",
+        "orientation": "LHF"
       },
       "notes": ""
     },
@@ -12,7 +16,191 @@
       "id": "4386fc56-3800-4e70-aa37-70a228f880cb",
       "image": "images/4386fc56-3800-4e70-aa37-70a228f880cb.png",
       "attribute_values": {
-        "ID": "4386fc56-3800-4e70-aa37-70a228f880cb"
+        "ID": "4386fc56-3800-4e70-aa37-70a228f880cb",
+        "shape": "straight",
+        "ottomans": "0",
+        "deep": "false",
+        "orientation": ""
+      },
+      "notes": ""
+    },
+    {
+      "id": "7f1517c9-99ca-47d0-b326-eaa7409eea65",
+      "image": "images/7f1517c9-99ca-47d0-b326-eaa7409eea65.png",
+      "attribute_values": {
+        "ID": "7f1517c9-99ca-47d0-b326-eaa7409eea65",
+        "orientation": "",
+        "deep": "false",
+        "ottomans": "0",
+        "shape": "straight"
+      },
+      "notes": ""
+    },
+    {
+      "id": "9257fbf4-152a-41d7-b960-15c21b49ab86",
+      "image": "images/9257fbf4-152a-41d7-b960-15c21b49ab86.png",
+      "attribute_values": {
+        "ID": "9257fbf4-152a-41d7-b960-15c21b49ab86",
+        "orientation": "LHF",
+        "deep": "false",
+        "ottomans": "1",
+        "shape": "L"
+      },
+      "notes": ""
+    },
+    {
+      "id": "d3497daa-556d-48c5-ad59-37dc36332d17",
+      "image": "images/d3497daa-556d-48c5-ad59-37dc36332d17.png",
+      "attribute_values": {
+        "ID": "d3497daa-556d-48c5-ad59-37dc36332d17",
+        "orientation": "",
+        "deep": "false",
+        "ottomans": "2",
+        "shape": "straight"
+      },
+      "notes": ""
+    },
+    {
+      "id": "1db2266f-d479-46ae-8bd6-941c0a13427e",
+      "image": "images/1db2266f-d479-46ae-8bd6-941c0a13427e.png",
+      "attribute_values": {
+        "ID": "1db2266f-d479-46ae-8bd6-941c0a13427e",
+        "orientation": "RHF",
+        "deep": "false",
+        "ottomans": "1",
+        "shape": "L"
+      },
+      "notes": ""
+    },
+    {
+      "id": "652bc256-8736-46d5-9344-b448c69b1be8",
+      "image": "images/652bc256-8736-46d5-9344-b448c69b1be8.png",
+      "attribute_values": {
+        "ID": "652bc256-8736-46d5-9344-b448c69b1be8",
+        "orientation": "",
+        "deep": "false",
+        "ottomans": "0",
+        "shape": "straight"
+      },
+      "notes": ""
+    },
+    {
+      "id": "ee18cd8c-6cc3-46cc-a7b2-38bfad62012e",
+      "image": "images/ee18cd8c-6cc3-46cc-a7b2-38bfad62012e.png",
+      "attribute_values": {
+        "ID": "ee18cd8c-6cc3-46cc-a7b2-38bfad62012e",
+        "orientation": "LHF",
+        "deep": "false",
+        "ottomans": "1",
+        "shape": "L"
+      },
+      "notes": ""
+    },
+    {
+      "id": "e3319f2a-bd0e-4a14-b1f3-9e6c2de70237",
+      "image": "images/e3319f2a-bd0e-4a14-b1f3-9e6c2de70237.png",
+      "attribute_values": {
+        "ID": "e3319f2a-bd0e-4a14-b1f3-9e6c2de70237",
+        "orientation": "RHF",
+        "deep": "false",
+        "ottomans": "1",
+        "shape": "L"
+      },
+      "notes": ""
+    },
+    {
+      "id": "b8eb4207-79c3-496c-8d6e-7115f548bb92",
+      "image": "images/b8eb4207-79c3-496c-8d6e-7115f548bb92.png",
+      "attribute_values": {
+        "ID": "b8eb4207-79c3-496c-8d6e-7115f548bb92",
+        "orientation": "RHF",
+        "deep": "false",
+        "ottomans": "1",
+        "shape": "L"
+      },
+      "notes": ""
+    },
+    {
+      "id": "97c554bb-05d4-4748-9c24-eefe8cca729d",
+      "image": "images/97c554bb-05d4-4748-9c24-eefe8cca729d.png",
+      "attribute_values": {
+        "ID": "97c554bb-05d4-4748-9c24-eefe8cca729d",
+        "orientation": "LHF",
+        "deep": "true",
+        "ottomans": "1",
+        "shape": "L"
+      },
+      "notes": ""
+    },
+    {
+      "id": "7003c9af-9898-4745-b9b1-dba3a1bc61b7",
+      "image": "images/7003c9af-9898-4745-b9b1-dba3a1bc61b7.png",
+      "attribute_values": {
+        "ID": "7003c9af-9898-4745-b9b1-dba3a1bc61b7",
+        "orientation": "RHF",
+        "deep": "true",
+        "ottomans": "1",
+        "shape": "L"
+      },
+      "notes": ""
+    },
+    {
+      "id": "e9385c58-e47f-4c13-8547-5d2858f7a758",
+      "image": "images/e9385c58-e47f-4c13-8547-5d2858f7a758.png",
+      "attribute_values": {
+        "ID": "e9385c58-e47f-4c13-8547-5d2858f7a758",
+        "orientation": "LHF",
+        "deep": "true",
+        "ottomans": "2",
+        "shape": "L"
+      },
+      "notes": ""
+    },
+    {
+      "id": "bc3b3629-05db-47d9-aa9d-41c0341d6085",
+      "image": "images/bc3b3629-05db-47d9-aa9d-41c0341d6085.png",
+      "attribute_values": {
+        "ID": "bc3b3629-05db-47d9-aa9d-41c0341d6085",
+        "orientation": "",
+        "deep": "true",
+        "ottomans": "0",
+        "shape": "straight"
+      },
+      "notes": ""
+    },
+    {
+      "id": "f77ff39a-62c9-40fc-9d12-9899e2d332a0",
+      "image": "images/f77ff39a-62c9-40fc-9d12-9899e2d332a0.png",
+      "attribute_values": {
+        "ID": "f77ff39a-62c9-40fc-9d12-9899e2d332a0",
+        "orientation": "",
+        "deep": "true",
+        "ottomans": "0",
+        "shape": "straight"
+      },
+      "notes": ""
+    },
+    {
+      "id": "8deba121-4429-4b8b-b260-c5afd6947407",
+      "image": "images/8deba121-4429-4b8b-b260-c5afd6947407.png",
+      "attribute_values": {
+        "ID": "8deba121-4429-4b8b-b260-c5afd6947407",
+        "orientation": "RHF",
+        "deep": "true",
+        "ottomans": "2",
+        "shape": "L"
+      },
+      "notes": ""
+    },
+    {
+      "id": "cca78197-1784-45f5-84c6-9caf3b90c5dd",
+      "image": "images/cca78197-1784-45f5-84c6-9caf3b90c5dd.png",
+      "attribute_values": {
+        "ID": "cca78197-1784-45f5-84c6-9caf3b90c5dd",
+        "orientation": "",
+        "deep": "true",
+        "ottomans": "0",
+        "shape": "straight"
       },
       "notes": ""
     }
@@ -22,7 +210,24 @@
       "name": "ID",
       "description": "",
       "readonly": true
+    },
+    {
+      "name": "orientation",
+      "description": ""
+    },
+    {
+      "name": "deep",
+      "description": ""
+    },
+    {
+      "name": "ottomans",
+      "description": ""
+    },
+    {
+      "name": "shape",
+      "description": ""
     }
   ],
-  "last_updated": "2025-03-18T10:39:33.792524"
+  "last_updated": "2025-03-18T11:21:18.082146",
+  "_restartTimestamp": 1742310719040
 }
