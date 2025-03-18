@@ -8,7 +8,8 @@
         "shape": "L",
         "ottomans": "1",
         "deep": "false",
-        "orientation": "LHF"
+        "orientation": "LHF",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -20,7 +21,8 @@
         "shape": "straight",
         "ottomans": "0",
         "deep": "false",
-        "orientation": ""
+        "orientation": "",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -32,7 +34,8 @@
         "orientation": "",
         "deep": "false",
         "ottomans": "0",
-        "shape": "straight"
+        "shape": "straight",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -44,7 +47,8 @@
         "orientation": "LHF",
         "deep": "false",
         "ottomans": "1",
-        "shape": "L"
+        "shape": "L",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -56,7 +60,8 @@
         "orientation": "",
         "deep": "false",
         "ottomans": "2",
-        "shape": "straight"
+        "shape": "straight",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -68,7 +73,8 @@
         "orientation": "RHF",
         "deep": "false",
         "ottomans": "1",
-        "shape": "L"
+        "shape": "L",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -80,7 +86,8 @@
         "orientation": "",
         "deep": "false",
         "ottomans": "0",
-        "shape": "straight"
+        "shape": "straight",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -92,7 +99,8 @@
         "orientation": "LHF",
         "deep": "false",
         "ottomans": "1",
-        "shape": "L"
+        "shape": "L",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -104,7 +112,8 @@
         "orientation": "RHF",
         "deep": "false",
         "ottomans": "1",
-        "shape": "L"
+        "shape": "L",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -116,7 +125,8 @@
         "orientation": "RHF",
         "deep": "false",
         "ottomans": "1",
-        "shape": "L"
+        "shape": "L",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -128,7 +138,8 @@
         "orientation": "LHF",
         "deep": "true",
         "ottomans": "1",
-        "shape": "L"
+        "shape": "L",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -140,7 +151,8 @@
         "orientation": "RHF",
         "deep": "true",
         "ottomans": "1",
-        "shape": "L"
+        "shape": "L",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -152,7 +164,8 @@
         "orientation": "LHF",
         "deep": "true",
         "ottomans": "2",
-        "shape": "L"
+        "shape": "L",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -164,7 +177,8 @@
         "orientation": "",
         "deep": "true",
         "ottomans": "0",
-        "shape": "straight"
+        "shape": "straight",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -176,7 +190,8 @@
         "orientation": "",
         "deep": "true",
         "ottomans": "0",
-        "shape": "straight"
+        "shape": "straight",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -188,7 +203,8 @@
         "orientation": "RHF",
         "deep": "true",
         "ottomans": "2",
-        "shape": "L"
+        "shape": "L",
+        "anytable": ""
       },
       "notes": ""
     },
@@ -200,7 +216,87 @@
         "orientation": "",
         "deep": "true",
         "ottomans": "0",
-        "shape": "straight"
+        "shape": "straight",
+        "anytable": ""
+      },
+      "notes": ""
+    },
+    {
+      "id": "3f55e33b-d3f9-4c39-9812-9bff6d963699",
+      "image": "images/3f55e33b-d3f9-4c39-9812-9bff6d963699.png",
+      "attribute_values": {
+        "ID": "3f55e33b-d3f9-4c39-9812-9bff6d963699",
+        "anytable": ""
+      },
+      "notes": ""
+    },
+    {
+      "id": "2ecfe71c-3699-4e7b-b2b8-f3f6ffd441ef",
+      "image": "images/2ecfe71c-3699-4e7b-b2b8-f3f6ffd441ef.png",
+      "attribute_values": {
+        "ID": "2ecfe71c-3699-4e7b-b2b8-f3f6ffd441ef",
+        "anytable": ""
+      },
+      "notes": ""
+    },
+    {
+      "id": "fc17b5fa-4bd9-43d3-9dd6-18384f033ac9",
+      "image": "images/fc17b5fa-4bd9-43d3-9dd6-18384f033ac9.png",
+      "attribute_values": {
+        "ID": "fc17b5fa-4bd9-43d3-9dd6-18384f033ac9",
+        "anytable": ""
+      },
+      "notes": ""
+    },
+    {
+      "id": "0e1364d1-90f1-4fc4-98ae-a8f8cab2d99a",
+      "image": "images/0e1364d1-90f1-4fc4-98ae-a8f8cab2d99a.png",
+      "attribute_values": {
+        "ID": "0e1364d1-90f1-4fc4-98ae-a8f8cab2d99a",
+        "anytable": ""
+      },
+      "notes": ""
+    },
+    {
+      "id": "c94148b0-050d-40f5-92f1-a80cd6722279",
+      "image": "images/c94148b0-050d-40f5-92f1-a80cd6722279.png",
+      "attribute_values": {
+        "ID": "c94148b0-050d-40f5-92f1-a80cd6722279",
+        "anytable": ""
+      },
+      "notes": ""
+    },
+    {
+      "id": "ea27e509-b2b8-4fed-99d6-e7f267fd09a9",
+      "image": "images/ea27e509-b2b8-4fed-99d6-e7f267fd09a9.png",
+      "attribute_values": {
+        "ID": "ea27e509-b2b8-4fed-99d6-e7f267fd09a9",
+        "anytable": ""
+      },
+      "notes": ""
+    },
+    {
+      "id": "2c360981-204a-47a8-a8e2-be4bf6e15778",
+      "image": "images/2c360981-204a-47a8-a8e2-be4bf6e15778.png",
+      "attribute_values": {
+        "ID": "2c360981-204a-47a8-a8e2-be4bf6e15778",
+        "anytable": ""
+      },
+      "notes": ""
+    },
+    {
+      "id": "1063a9fb-297f-4b86-9c4b-85faf8684493",
+      "image": "images/1063a9fb-297f-4b86-9c4b-85faf8684493.png",
+      "attribute_values": {
+        "ID": "1063a9fb-297f-4b86-9c4b-85faf8684493"
+      },
+      "notes": ""
+    },
+    {
+      "id": "30e5be2d-0b1b-4c51-926d-085c0d8b2dcf",
+      "image": "images/30e5be2d-0b1b-4c51-926d-085c0d8b2dcf.png",
+      "attribute_values": {
+        "ID": "30e5be2d-0b1b-4c51-926d-085c0d8b2dcf"
       },
       "notes": ""
     }
@@ -210,6 +306,10 @@
       "name": "ID",
       "description": "",
       "readonly": true
+    },
+    {
+      "name": "anytable",
+      "description": ""
     },
     {
       "name": "orientation",
@@ -228,6 +328,6 @@
       "description": ""
     }
   ],
-  "last_updated": "2025-03-18T11:21:18.082146",
+  "last_updated": "2025-03-18T11:58:14.695796",
   "_restartTimestamp": 1742310719040
 }

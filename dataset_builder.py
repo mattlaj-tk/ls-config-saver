@@ -131,6 +131,36 @@ class DatasetHTTPHandler(SimpleHTTPRequestHandler):
                         'message': str(e)
                     })
                     self.send_uncached_response(500, 'application/json', error_data)
+            elif self.path == '/remove':
+                try:
+                    data = json.loads(post_data)
+                    item_id = data.get('item_id')
+                    
+                    if not item_id:
+                        self.send_uncached_response(400, 'application/json', 
+                                                   '{"status": "error", "message": "Item ID is required"}')
+                        return
+                    
+                    success = self.dataset_builder.remove_item(item_id)
+                    
+                    if success:
+                        response_data = json.dumps({
+                            'status': 'success',
+                            'message': f"Item {item_id} removed successfully",
+                            'items': self.dataset_builder.dataset['items'],
+                            'last_updated': self.dataset_builder.dataset['last_updated']
+                        })
+                        self.send_uncached_response(200, 'application/json', response_data)
+                    else:
+                        self.send_uncached_response(404, 'application/json', 
+                                                  f'{{"status": "error", "message": "Item {item_id} not found"}}')
+                except Exception as e:
+                    print(f"Error removing item: {e}")
+                    error_data = json.dumps({
+                        'status': 'error',
+                        'message': str(e)
+                    })
+                    self.send_uncached_response(500, 'application/json', error_data)
             elif self.path == '/restart':
                 try:
                     print("Received restart request from client...")
@@ -391,6 +421,48 @@ class DatasetBuilder:
             print(f"Error saving dataset to {self.data_file}: {e}")
             raise
     
+    def remove_item(self, item_id):
+        """Remove an item from the dataset and delete its image file.
+        
+        Args:
+            item_id: ID of the item to remove
+            
+        Returns:
+            Boolean indicating success
+        """
+        # Find the item in the dataset
+        item_to_remove = None
+        for item in self.dataset['items']:
+            if item['id'] == item_id:
+                item_to_remove = item
+                break
+        
+        if not item_to_remove:
+            print(f"Item with ID {item_id} not found")
+            return False
+        
+        # Delete the image file if it exists
+        try:
+            if 'image' in item_to_remove and item_to_remove['image']:
+                image_path = Path(self.output_dir) / item_to_remove['image']
+                if image_path.exists():
+                    image_path.unlink()
+                    print(f"Deleted image file: {image_path}")
+        except Exception as e:
+            print(f"Warning: Could not delete image file: {e}")
+        
+        # Remove the item from the dataset
+        self.dataset['items'] = [item for item in self.dataset['items'] if item['id'] != item_id]
+        
+        # Update timestamp
+        self.dataset['last_updated'] = datetime.now().isoformat()
+        
+        # Save updated dataset
+        self._save_dataset()
+        
+        print(f"Removed item {item_id} from dataset")
+        return True
+    
     def export_to_database(self, db_config=None):
         """Export dataset to a database."""
         if db_config is None:
@@ -582,6 +654,7 @@ class DatasetBuilder:
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 10px;
         }
         .attribute-control {
             margin-bottom: 15px;
@@ -609,62 +682,6 @@ class DatasetBuilder:
             100% { background-color: transparent; }
         }
         .btn {
-            padding: 5px 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-        .btn:hover {
-            background-color: #45a049;
-        }
-        .btn-remove {
-            background-color: #f44336;
-        }
-        .btn-remove:hover {
-            background-color: #d32f2f;
-        }
-        .btn-save-all {
-            margin-top: 20px;
-            padding: 10px 15px;
-            font-size: 1em;
-        }
-        .filter-box {
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border-radius: 5px;
-        }
-        #searchInput {
-            width: 300px;
-            padding: 8px;
-            margin-right: 10px;
-        }
-        .last-updated {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 10px;
-        }
-        .sidebar-header {
-            font-size: 1.2em;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-        .hidden {
-            display: none;
-        }
-        .attribute-section {
-            margin-top: 15px;
-        }
-        .header-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .btn {
             padding: 8px 16px;
             border: none;
             border-radius: 4px;
@@ -678,6 +695,10 @@ class DatasetBuilder:
         }
         .btn-primary:hover {
             background-color: #0056b3;
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
         .btn-save {
             background-color: #28a745;
@@ -697,6 +718,20 @@ class DatasetBuilder:
         }
         .btn-secondary:hover {
             background-color: #545b62;
+        }
+        .btn-remove {
+            background-color: #f44336;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .btn-remove:hover {
+            background-color: #d32f2f;
+        }
+        .btn-save-all {
+            margin-top: 20px;
+            padding: 10px 15px;
+            font-size: 1em;
         }
         #status-message {
             display: none;
@@ -752,6 +787,279 @@ class DatasetBuilder:
             margin-top: 10px;
             font-size: 0.9em;
         }
+        
+        .last-updated {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .sidebar-header {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .attribute-section {
+            margin-top: 15px;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        /* Filter styles */
+        .filter-container {
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 15px 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 0.3s ease-in-out, padding 0.3s ease, margin 0.3s ease;
+        }
+        
+        .filter-container.expanded {
+            max-height: 1000px;  /* Large enough to contain content */
+            padding: 20px;
+            margin: 15px 0;
+        }
+        
+        .filter-toggle {
+            display: flex;
+            align-items: center;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px 15px;
+            margin: 15px 0 0 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            user-select: none;
+            font-weight: 500;
+            color: #333;
+            transition: background-color 0.2s;
+        }
+        
+        .filter-toggle:hover {
+            background-color: #e9ecef;
+        }
+        
+        .filter-toggle-icon {
+            margin-right: 8px;
+            transition: transform 0.3s;
+        }
+        
+        .filter-toggle.expanded .filter-toggle-icon {
+            transform: rotate(90deg);
+        }
+        
+        .filter-container h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            color: #333;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+            flex-wrap: nowrap;
+        }
+        
+        /* Responsive adjustments for filter row */
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .filter-attribute,
+            .filter-operator,
+            .filter-value {
+                width: 100%;
+            }
+            
+            .filter-control {
+                margin-left: 0;
+                margin-top: 8px;
+                align-self: flex-end;
+            }
+        }
+        
+        .filter-attribute,
+        .filter-operator,
+        .filter-value {
+            height: 36px;
+            padding: 0 10px;
+            font-size: 14px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            background-color: white;
+            box-sizing: border-box;
+        }
+        
+        .filter-attribute {
+            width: 140px;
+        }
+        
+        .filter-operator {
+            width: 110px;
+        }
+        
+        .filter-value {
+            width: 120px;
+        }
+        
+        .filter-control {
+            margin-left: 0;
+        }
+        
+        .filter-control .btn {
+            height: 36px;
+            padding: 0 15px;
+            font-size: 14px;
+            border-radius: 4px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 4px rgba(0, 123, 255, 0.1);
+        }
+        
+        .filter-control .btn:hover {
+            background-color: #0069d9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+        }
+        
+        .filter-control .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0, 123, 255, 0.2);
+        }
+        
+        .active-filter {
+            display: inline-flex;
+            align-items: center;
+            background-color: #e2f0ff;
+            border: 1px solid #b8daff;
+            border-radius: 4px;
+            padding: 6px 12px;
+            margin-bottom: 10px;
+            font-size: 14px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+        }
+        
+        .active-filter:hover {
+            background-color: #d5e7ff;
+            border-color: #99c2ff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .filter-content {
+            cursor: pointer;
+        }
+        
+        .filter-content:hover {
+            text-decoration: underline;
+        }
+        
+        .filter-remove {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            color: #dc3545;
+            cursor: pointer;
+            font-weight: bold;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+        
+        .filter-remove:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .filter-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .filter-actions .btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn-filter-apply {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-filter-apply:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .btn-filter-clear {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-filter-clear:hover {
+            background-color: #5a6268;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .btn-filter-apply:active,
+        .btn-filter-clear:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+        
+        #active-filters {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        /* No active filters message styling */
+        #active-filters p {
+            color: #6c757d;
+            font-style: italic;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -772,6 +1080,39 @@ class DatasetBuilder:
                 <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
             </div>
         </div>
+        
+        <!-- Filter UI -->
+        <div class="filter-toggle" onclick="toggleFilterDrawer(this)">
+            <span class="filter-toggle-icon">▶</span>
+            <span>Filter by Attributes</span>
+        </div>
+        
+        <div class="filter-container" id="filter-container">
+            <div id="active-filters"></div>
+            <div id="filter-builder">
+                <div class="filter-row">
+                    <select class="filter-attribute" id="filter-attribute">
+                        <option value="">Select attribute...</option>
+                    </select>
+                    <select class="filter-operator" id="filter-operator">
+                        <option value="equals">equals</option>
+                        <option value="contains">contains</option>
+                        <option value="startsWith">starts with</option>
+                        <option value="endsWith">ends with</option>
+                        <option value="notEquals">not equals</option>
+                    </select>
+                    <input type="text" class="filter-value" id="filter-value" placeholder="Value">
+                    <div class="filter-control">
+                        <button class="btn" onclick="addFilter()">Add Filter</button>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="btn btn-filter-apply" onclick="applyFilters()">Apply Filters</button>
+                <button class="btn btn-filter-clear" onclick="clearFilters()">Clear Filters</button>
+            </div>
+        </div>
+        
         <div class="status-message">Showing <span id="itemCount">0</span> items</div>
     </div>
     
@@ -798,6 +1139,8 @@ class DatasetBuilder:
         // Dataset
         const dataset = DATASET_JSON;
         let filteredItems = [...dataset.items];
+        let activeFilters = [];
+        let searchTerm = '';
         
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
@@ -820,6 +1163,12 @@ class DatasetBuilder:
             renderItems(dataset.items);
             updateLastUpdated();
             updateItemCount();
+            populateFilterAttributes();
+            
+            // Check if there are active filters to expand the drawer
+            if (activeFilters && activeFilters.length > 0) {
+                toggleFilterDrawer(document.querySelector('.filter-toggle'), true);
+            }
         });
         
         function updateLastUpdated() {
@@ -1041,6 +1390,7 @@ class DatasetBuilder:
                 card.innerHTML = `
                     <div class="item-header">
                         <div class="item-id">${item.id}</div>
+                        <button class="btn btn-remove" onclick="removeItem('${item.id}')">Remove</button>
                     </div>
                     <img src="${item.image}" alt="${item.id}" class="item-image">
                     <div class="item-details">
@@ -1259,12 +1609,196 @@ class DatasetBuilder:
         }
         
         function searchItems() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            applyFiltersAndSearch();
+        }
+        
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            searchTerm = '';
+            applyFiltersAndSearch();
+        }
+        
+        function populateFilterAttributes() {
+            const attributeSelect = document.getElementById('filter-attribute');
+            const operatorSelect = document.getElementById('filter-operator');
+            const filterValueInput = document.getElementById('filter-value');
             
-            if (!searchTerm) {
-                filteredItems = [...dataset.items];
+            // Clear existing options except the first one
+            while (attributeSelect.options.length > 1) {
+                attributeSelect.remove(1);
+            }
+            
+            // Add attributes from the dataset
+            if (dataset.attributes && dataset.attributes.length > 0) {
+                dataset.attributes.forEach(attr => {
+                    const option = document.createElement('option');
+                    option.value = attr.name;
+                    option.textContent = attr.name;
+                    attributeSelect.appendChild(option);
+                });
+            }
+            
+            // Auto-focus on the next field after selection
+            attributeSelect.addEventListener('change', function() {
+                if (this.value) {
+                    operatorSelect.focus();
+                }
+            });
+            
+            operatorSelect.addEventListener('change', function() {
+                filterValueInput.focus();
+            });
+            
+            // Add keyboard shortcut to submit filter with Enter key
+            filterValueInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addFilter();
+                }
+            });
+        }
+        
+        function toggleFilterDrawer(toggleElement, forceExpand) {
+            const filterContainer = document.getElementById('filter-container');
+            const isExpanded = forceExpand !== undefined ? forceExpand : !toggleElement.classList.contains('expanded');
+            
+            if (isExpanded) {
+                toggleElement.classList.add('expanded');
+                filterContainer.classList.add('expanded');
             } else {
-                filteredItems = dataset.items.filter(item => {
+                toggleElement.classList.remove('expanded');
+                filterContainer.classList.remove('expanded');
+            }
+        }
+        
+        function addFilter() {
+            const attributeSelect = document.getElementById('filter-attribute');
+            const operatorSelect = document.getElementById('filter-operator');
+            const valueInput = document.getElementById('filter-value');
+            
+            const attribute = attributeSelect.value;
+            const operator = operatorSelect.value;
+            const value = valueInput.value.trim();
+            
+            if (!attribute || !value) {
+                showStatus('Please select an attribute and enter a value', 'error');
+                return;
+            }
+            
+            // Add to active filters
+            const filterId = Date.now(); // Unique ID for this filter
+            activeFilters.push({
+                id: filterId,
+                attribute,
+                operator,
+                value
+            });
+            
+            // Update UI
+            renderActiveFilters();
+            
+            // Ensure the drawer is expanded when filters are added
+            toggleFilterDrawer(document.querySelector('.filter-toggle'), true);
+            
+            // Clear the inputs and prepare for next filter
+            attributeSelect.selectedIndex = 0;
+            valueInput.value = '';
+            attributeSelect.focus();
+            
+            // Apply filters
+            applyFiltersAndSearch();
+        }
+        
+        function removeFilter(filterId) {
+            activeFilters = activeFilters.filter(filter => filter.id !== filterId);
+            renderActiveFilters();
+            applyFiltersAndSearch();
+        }
+        
+        function renderActiveFilters() {
+            const container = document.getElementById('active-filters');
+            container.innerHTML = '';
+            
+            if (activeFilters.length === 0) {
+                container.innerHTML = '<p>No active filters</p>';
+                return;
+            }
+            
+            activeFilters.forEach(filter => {
+                const filterElement = document.createElement('div');
+                filterElement.className = 'active-filter';
+                
+                // Format operator for display
+                let displayOperator = filter.operator;
+                if (filter.operator === 'equals') displayOperator = '=';
+                if (filter.operator === 'notEquals') displayOperator = '≠';
+                if (filter.operator === 'contains') displayOperator = 'contains';
+                if (filter.operator === 'startsWith') displayOperator = 'starts with';
+                if (filter.operator === 'endsWith') displayOperator = 'ends with';
+                
+                // Bold the attribute name for better readability
+                filterElement.innerHTML = `
+                    <span class="filter-content" onclick="editFilter(${filter.id})"><strong>${filter.attribute}</strong> ${displayOperator} "${filter.value}"</span>
+                    <span class="filter-remove" onclick="removeFilter(${filter.id})">×</span>
+                `;
+                container.appendChild(filterElement);
+            });
+        }
+        
+        function editFilter(filterId) {
+            const filter = activeFilters.find(f => f.id === filterId);
+            if (!filter) return;
+            
+            // Populate the filter form
+            const attributeSelect = document.getElementById('filter-attribute');
+            const operatorSelect = document.getElementById('filter-operator');
+            const valueInput = document.getElementById('filter-value');
+            
+            // Set attribute
+            for (let i = 0; i < attributeSelect.options.length; i++) {
+                if (attributeSelect.options[i].value === filter.attribute) {
+                    attributeSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            // Set operator
+            for (let i = 0; i < operatorSelect.options.length; i++) {
+                if (operatorSelect.options[i].value === filter.operator) {
+                    operatorSelect.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            // Set value
+            valueInput.value = filter.value;
+            
+            // Remove this filter from the active filters
+            removeFilter(filterId);
+            
+            // Focus on the value input for quick editing
+            valueInput.focus();
+            valueInput.select();
+        }
+        
+        function applyFilters() {
+            applyFiltersAndSearch();
+        }
+        
+        function clearFilters() {
+            activeFilters = [];
+            renderActiveFilters();
+            applyFiltersAndSearch();
+        }
+        
+        function applyFiltersAndSearch() {
+            // Start with all items
+            let results = [...dataset.items];
+            
+            // Apply search if there's a search term
+            if (searchTerm) {
+                results = results.filter(item => {
                     // Search in item ID
                     if (item.id.toLowerCase().includes(searchTerm)) {
                         return true;
@@ -1292,13 +1826,38 @@ class DatasetBuilder:
                 });
             }
             
-            renderItems(filteredItems);
-            updateItemCount();
-        }
-        
-        function clearSearch() {
-            document.getElementById('searchInput').value = '';
-            filteredItems = [...dataset.items];
+            // Apply filters
+            if (activeFilters.length > 0) {
+                results = results.filter(item => {
+                    // Item must match all filters (AND logic)
+                    return activeFilters.every(filter => {
+                        // Get the value for this attribute
+                        const itemValue = item.attribute_values && item.attribute_values[filter.attribute] 
+                            ? item.attribute_values[filter.attribute].toString().toLowerCase() 
+                            : '';
+                        const filterValue = filter.value.toLowerCase();
+                        
+                        // Apply the operator
+                        switch (filter.operator) {
+                            case 'equals':
+                                return itemValue === filterValue;
+                            case 'notEquals':
+                                return itemValue !== filterValue;
+                            case 'contains':
+                                return itemValue.includes(filterValue);
+                            case 'startsWith':
+                                return itemValue.startsWith(filterValue);
+                            case 'endsWith':
+                                return itemValue.endsWith(filterValue);
+                            default:
+                                return false;
+                        }
+                    });
+                });
+            }
+            
+            // Update the filtered items and render
+            filteredItems = results;
             renderItems(filteredItems);
             updateItemCount();
         }
@@ -1349,6 +1908,118 @@ class DatasetBuilder:
                 console.error('Refresh error:', error);
                 showStatus('Error refreshing images: ' + error.message, 'error');
             }
+        }
+        
+        async function removeItem(itemId) {
+            if (!confirm(`Are you sure you want to remove item "${itemId}"?\nThis will delete both the database entry and the image file.`)) {
+                return;
+            }
+            
+            showStatus(`Removing item ${itemId}...`, 'info');
+            
+            try {
+                const response = await fetch('/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_id: itemId })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.status !== 'success') {
+                    throw new Error(data.message || 'Unknown error');
+                }
+                
+                // Update the dataset with the updated data
+                dataset.items = data.items;
+                dataset.last_updated = data.last_updated;
+                
+                // Refresh the UI
+                filteredItems = dataset.items.filter(item => {
+                    // Re-apply any active filters
+                    if (activeFilters.length === 0 && !searchTerm) {
+                        return true;
+                    }
+                    return applyFiltersToItem(item);
+                });
+                
+                renderItems(filteredItems);
+                updateLastUpdated();
+                updateItemCount();
+                
+                showStatus(`Item ${itemId} removed successfully!`, 'info');
+            } catch (error) {
+                console.error('Remove error:', error);
+                showStatus('Error removing item: ' + error.message, 'error');
+            }
+        }
+        
+        function applyFiltersToItem(item) {
+            // Helper function to check if an item matches the current search and filters
+            let matchesSearch = true;
+            let matchesFilters = true;
+            
+            // Check search term
+            if (searchTerm) {
+                matchesSearch = false;
+                
+                // Search in item ID
+                if (item.id.toLowerCase().includes(searchTerm)) {
+                    matchesSearch = true;
+                }
+                
+                // Search in attribute values
+                if (!matchesSearch && item.attribute_values) {
+                    for (const [key, value] of Object.entries(item.attribute_values)) {
+                        if (
+                            value && 
+                            value.toString().toLowerCase().includes(searchTerm) ||
+                            key.toLowerCase().includes(searchTerm)
+                        ) {
+                            matchesSearch = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // Search in notes
+                if (!matchesSearch && item.notes && item.notes.toLowerCase().includes(searchTerm)) {
+                    matchesSearch = true;
+                }
+            }
+            
+            // Check filters
+            if (activeFilters.length > 0) {
+                matchesFilters = activeFilters.every(filter => {
+                    // Get the value for this attribute
+                    const itemValue = item.attribute_values && item.attribute_values[filter.attribute] 
+                        ? item.attribute_values[filter.attribute].toString().toLowerCase() 
+                        : '';
+                    const filterValue = filter.value.toLowerCase();
+                    
+                    // Apply the operator
+                    switch (filter.operator) {
+                        case 'equals':
+                            return itemValue === filterValue;
+                        case 'notEquals':
+                            return itemValue !== filterValue;
+                        case 'contains':
+                            return itemValue.includes(filterValue);
+                        case 'startsWith':
+                            return itemValue.startsWith(filterValue);
+                        case 'endsWith':
+                            return itemValue.endsWith(filterValue);
+                        default:
+                            return false;
+                    }
+                });
+            }
+            
+            return matchesSearch && matchesFilters;
         }
     </script>
 </body>
