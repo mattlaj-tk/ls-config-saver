@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "id": "c6cb8d05-fe08-4aa1-91b5-687ffbfc9add",
+      "image": "images/c6cb8d05-fe08-4aa1-91b5-687ffbfc9add.png",
+      "attribute_values": {
+        "ID": "c6cb8d05-fe08-4aa1-91b5-687ffbfc9add"
+      },
+      "notes": ""
+    },
+    {
+      "id": "4386fc56-3800-4e70-aa37-70a228f880cb",
+      "image": "images/4386fc56-3800-4e70-aa37-70a228f880cb.png",
+      "attribute_values": {
+        "ID": "4386fc56-3800-4e70-aa37-70a228f880cb"
+      },
+      "notes": ""
+    }
+  ],
+  "attributes": [
+    {
+      "name": "ID",
+      "description": "",
+      "readonly": true
+    }
+  ],
+  "last_updated": "2025-03-18T10:39:33.792524"
+}

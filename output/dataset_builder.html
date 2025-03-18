@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dataset Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .header {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        .container {
+            display: flex;
+            gap: 20px;
+        }
+        .sidebar {
+            width: 300px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .item-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            flex: 1;
+        }
+        .item-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            width: 300px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: white;
+            position: relative;
+        }
+        .item-image {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+        }
+        .item-details {
+            margin-bottom: 15px;
+        }
+        .item-id {
+            font-weight: bold;
+            color: #444;
+            margin-bottom: 5px;
+        }
+        label {
+            display: block;
+            margin-top: 8px;
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #555;
+        }
+        input[type="text"], textarea {
+            width: calc(100% - 16px);
+            padding: 8px;
+            margin-top: 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        textarea {
+            height: 60px;
+            resize: vertical;
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .attribute-control {
+            margin-bottom: 15px;
+        }
+        .attribute-row {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        .attribute-row input {
+            flex: 1;
+            margin-right: 5px;
+        }
+        .shared-attribute-row {
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .btn {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .btn-remove {
+            background-color: #f44336;
+        }
+        .btn-remove:hover {
+            background-color: #d32f2f;
+        }
+        .btn-save-all {
+            margin-top: 20px;
+            padding: 10px 15px;
+            font-size: 1em;
+        }
+        .filter-box {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        #searchInput {
+            width: 300px;
+            padding: 8px;
+            margin-right: 10px;
+        }
+        .last-updated {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .sidebar-header {
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .hidden {
+            display: none;
+        }
+        .attribute-section {
+            margin-top: 15px;
+        }
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #545b62;
+        }
+        #status-message {
+            display: none;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .status-info {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        .readonly-attribute {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .readonly-attribute label {
+            color: #495057;
+            font-weight: bold;
+        }
+        .readonly-attribute .description {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin: 5px 0 0 0;
+        }
+        input[readonly] {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+        .search-box {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .search-box input {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            flex-grow: 1;
+            max-width: 400px;
+        }
+        
+        .search-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .status-message {
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+        
+        /* Tabs Styling */
+        .tabs {
+            margin-top: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .tab-list {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .tab-item {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            margin-bottom: -1px;
+            transition: all 0.3s;
+        }
+        
+        .tab-item.active {
+            color: #495057;
+            background-color: #fff;
+            border-color: #dee2e6 #dee2e6 #fff;
+            font-weight: bold;
+        }
+        
+        .tab-item:not(.active):hover {
+            background-color: #f8f9fa;
+            border-color: #f8f9fa #f8f9fa #dee2e6;
+        }
+        
+        .tab-content {
+            padding: 20px 0;
+        }
+        
+        .tab-pane {
+            display: none;
+        }
+        
+        .tab-pane.active {
+            display: block;
+        }
+        
+        /* iframe styling */
+        .iframe-container {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .create-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .create-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .download-info {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #17a2b8;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Dataset Builder Tool</h1>
+        <div class="header-buttons">
+            <button class="btn btn-primary" onclick="saveAllChanges()">Save Changes</button>
+            <button class="btn btn-secondary" onclick="restartServer()">Restart Server</button>
+        </div>
+        <div id="status-message"></div>
+        <div class="last-updated">Last updated: <span id="lastUpdated"></span></div>
+    </div>
+    
+    <div class="tabs">
+        <ul class="tab-list">
+            <li class="tab-item active" data-tab="view">View Dataset</li>
+            <li class="tab-item" data-tab="create">Create Images</li>
+        </ul>
+        
+        <div class="tab-content">
+            <!-- View Tab -->
+            <div id="view" class="tab-pane active">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search by ID or attribute values...">
+                    <div class="search-controls">
+                        <button class="btn btn-primary" onclick="searchItems()">Search</button>
+                        <button class="btn btn-secondary" onclick="clearSearch()">Clear</button>
+                    </div>
+                </div>
+                <div class="status-message">Showing <span id="itemCount">0</span> items</div>
+                
+                <div class="container">
+                    <div class="sidebar">
+                        <div class="sidebar-header">Shared Attributes</div>
+                        <div id="sharedAttributes">
+                            <!-- Shared attributes will be generated here -->
+                        </div>
+                        <button class="btn" onclick="addSharedAttribute()">Add Attribute</button>
+                    </div>
+                    
+                    <div id="item-container" class="item-container">
+                        <!-- Items will be generated here -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Create Tab -->
+            <div id="create" class="tab-pane">
+                <div class="create-container">
+                    <div class="create-info">
+                        <h2>Create New Images</h2>
+                        <p>Use the embedded tool below to create and customize new images. After creating your images, you can download them directly to the dataset.</p>
+                    </div>
+                    
+                    <div class="iframe-container">
+                        <iframe src="https://lovesac.mythreekit.dev" allowfullscreen></iframe>
+                    </div>
+                    
+                    <div class="download-info">
+                        <h3>Using Downloaded Images</h3>
+                        <p>When downloading images from the tool above:</p>
+                        <ol>
+                            <li>Save images to your local computer</li>
+                            <li>Move the downloaded images to this folder: <code id="imageFolder">/home/ml/Projects/lovesac/test-images</code></li>
+                            <li>Click the "Restart Server" button at the top to scan for new images</li>
+                        </ol>
+                        <p>Once restarted, your new images will appear in the dataset viewer.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Dataset
+        const dataset = {"items": [], "attributes": [{"name": "ID", "description": "", "readonly": true}], "last_updated": "2025-03-18T10:37:41.322987"};
+        let filteredItems = [...dataset.items];
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up tabs
+            setupTabs();
+            
+            // Render dataset viewer content
+            renderSharedAttributes();
+            renderItems(dataset.items);
+            updateLastUpdated();
+            updateItemCount();
+            
+            // Display the image folder path
+            const imageFolderEl = document.getElementById('imageFolder');
+            if (imageFolderEl) {
+                imageFolderEl.textContent = '/home/ml/Projects/lovesac/test-images';
+            }
+        });
+        
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab-item');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs and panes
+                    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding pane
+                    tab.classList.add('active');
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        function updateLastUpdated() {
+            const lastUpdatedEl = document.getElementById('lastUpdated');
+            if (lastUpdatedEl) {
+                lastUpdatedEl.textContent = formatDate(dataset.last_updated);
+            }
+        }
+        
+        function updateItemCount() {
+            const countEl = document.getElementById('itemCount');
+            if (countEl) {
+                countEl.textContent = filteredItems.length;
+            }
+        }
+        
+        function formatDate(dateString) {
+            if (!dateString) return 'Never';
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+        
+        function renderSharedAttributes() {
+            const container = document.getElementById('sharedAttributes');
+            container.innerHTML = '';
+            
+            if (!dataset.attributes) {
+                dataset.attributes = [];
+            }
+            
+            dataset.attributes.forEach((attr, index) => {
+                const attrElem = document.createElement('div');
+                attrElem.className = 'shared-attribute-row';
+                
+                // Special handling for 'ID' attribute
+                if (attr.name === 'ID') {
+                    attrElem.innerHTML = `
+                        <div class="readonly-attribute">
+                            <label>ID</label>
+                        </div>
+                    `;
+                } else {
+                    attrElem.innerHTML = `
+                        <label>Attribute Name:</label>
+                        <input type="text" class="attr-name" value="${attr.name}" placeholder="Attribute name">
+                        <label>Description (optional):</label>
+                        <input type="text" class="attr-description" value="${attr.description || ''}" placeholder="Description">
+                        <button class="btn btn-remove" onclick="removeSharedAttribute(${index})">Remove</button>
+                    `;
+                }
+                container.appendChild(attrElem);
+            });
+        }
+        
+        function addSharedAttribute() {
+            if (!dataset.attributes) {
+                dataset.attributes = [];
+            }
+            
+            // Add new attribute after the 'ID' attribute
+            dataset.attributes.splice(1, 0, {
+                name: "",
+                description: ""
+            });
+            
+            renderSharedAttributes();
+        }
+        
+        function removeSharedAttribute(index) {
+            // Prevent removing the 'ID' attribute
+            if (dataset.attributes[index].name === 'ID') {
+                alert('The ID attribute cannot be removed as it is required.');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to remove this attribute from all items?')) {
+                const attrName = dataset.attributes[index].name;
+                
+                // Remove from shared attributes
+                dataset.attributes.splice(index, 1);
+                
+                // Remove from all items
+                if (attrName) {
+                    dataset.items.forEach(item => {
+                        if (item.attribute_values && item.attribute_values[attrName]) {
+                            delete item.attribute_values[attrName];
+                        }
+                    });
+                }
+                
+                renderSharedAttributes();
+                renderItems(filteredItems);
+            }
+        }
+        
+        function renderItems(items) {
+            const container = document.getElementById('item-container');
+            container.innerHTML = '';
+            
+            items.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.dataset.id = item.id;
+                
+                if (!item.attribute_values) {
+                    item.attribute_values = {};
+                }
+                
+                // Ensure ID attribute value is set
+                item.attribute_values['ID'] = item.id;
+                
+                let attributesHtml = '';
+                if (dataset.attributes && dataset.attributes.length > 0) {
+                    attributesHtml = '<div class="attribute-section">';
+                    dataset.attributes.forEach(attr => {
+                        if (attr.name) {
+                            const value = item.attribute_values[attr.name] || '';
+                            if (attr.readonly) {
+                                attributesHtml += `
+                                <div class="attribute-row" data-name="${attr.name}">
+                                    <label>${attr.name}:</label>
+                                    <input type="text" class="attr-value" value="${value}" readonly>
+                                </div>`;
+                            } else {
+                                attributesHtml += `
+                                <div class="attribute-row" data-name="${attr.name}">
+                                    <label>${attr.name}${attr.description ? ' (' + attr.description + ')' : ''}:</label>
+                                    <input type="text" class="attr-value" value="${value}" placeholder="Value for ${attr.name}">
+                                </div>`;
+                            }
+                        }
+                    });
+                    attributesHtml += '</div>';
+                }
+                
+                card.innerHTML = `
+                    <div class="item-header">
+                        <div class="item-id">${item.id}</div>
+                    </div>
+                    <img src="${item.image}" alt="${item.id}" class="item-image">
+                    <div class="item-details">
+                        ${attributesHtml}
+                        <label for="notes-${index}">Notes:</label>
+                        <textarea id="notes-${index}" placeholder="Enter notes here...">${item.notes || ''}</textarea>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+            
+            if (items.length === 0) {
+                container.innerHTML = '<p>No items found. Add images to get started.</p>';
+            }
+        }
+        
+        function saveAllChanges() {
+            // Update shared attributes
+            const sharedAttrElems = document.querySelectorAll('#sharedAttributes .shared-attribute-row');
+            const idAttribute = dataset.attributes.find(attr => attr.name === 'ID');
+            dataset.attributes = [idAttribute]; // Keep the ID attribute
+            
+            // Add other attributes
+            sharedAttrElems.forEach(elem => {
+                const nameInput = elem.querySelector('.attr-name');
+                const descInput = elem.querySelector('.attr-description');
+                if (nameInput && nameInput.value.trim() && nameInput.value.trim() !== 'ID') {
+                    dataset.attributes.push({
+                        name: nameInput.value.trim(),
+                        description: descInput ? descInput.value.trim() : ''
+                    });
+                }
+            });
+            
+            // Update items
+            const cards = document.querySelectorAll('.item-card');
+            cards.forEach(card => {
+                const itemId = card.dataset.id;
+                const item = dataset.items.find(i => i.id === itemId);
+                
+                if (item) {
+                    // Initialize attribute_values if it doesn't exist
+                    if (!item.attribute_values) {
+                        item.attribute_values = {};
+                    }
+                    
+                    // Ensure ID attribute value is set
+                    item.attribute_values['ID'] = item.id;
+                    
+                    // Update other attribute values
+                    card.querySelectorAll('.attribute-row').forEach(row => {
+                        const attrName = row.dataset.name;
+                        if (attrName !== 'ID') {
+                            const valueInput = row.querySelector('.attr-value');
+                            if (valueInput) {
+                                item.attribute_values[attrName] = valueInput.value.trim();
+                            }
+                        }
+                    });
+                    
+                    // Update notes
+                    const notesElem = card.querySelector('textarea');
+                    if (notesElem) {
+                        item.notes = notesElem.value.trim();
+                    }
+                }
+            });
+            
+            // Update timestamp
+            dataset.last_updated = new Date().toISOString();
+            updateLastUpdated();
+            
+            // Send data to server
+            fetch('/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(dataset)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Server returned ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                showStatus('Changes saved successfully!', 'info');
+                setTimeout(() => {
+                    document.getElementById('status-message').style.display = 'none';
+                }, 3000);
+            })
+            .catch(error => {
+                showStatus('Error saving changes: ' + error.message, 'error');
+            });
+        }
+        
+        async function restartServer() {
+            if (!confirm('This will save all changes and restart the server. The page will reload. Continue?')) {
+                return;
+            }
+            
+            showStatus('Restarting server...', 'info');
+            
+            try {
+                const response = await fetch('/restart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(dataset)
+                });
+                
+                if (!response.ok) throw new Error('Failed to restart');
+                
+                // Wait a moment for the server to restart
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            } catch (error) {
+                // If we get an error, it might mean the server is restarting
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+            }
+        }
+        
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status-message');
+            statusEl.textContent = message;
+            statusEl.className = type === 'error' ? 'status-error' : 'status-info';
+            statusEl.style.display = 'block';
+        }
+        
+        function searchItems() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase().trim();
+            
+            if (!searchTerm) {
+                filteredItems = [...dataset.items];
+            } else {
+                filteredItems = dataset.items.filter(item => {
+                    // Search in item ID
+                    if (item.id.toLowerCase().includes(searchTerm)) {
+                        return true;
+                    }
+                    
+                    // Search in attribute values
+                    if (item.attribute_values) {
+                        for (const [key, value] of Object.entries(item.attribute_values)) {
+                            if (
+                                value && 
+                                value.toString().toLowerCase().includes(searchTerm) ||
+                                key.toLowerCase().includes(searchTerm)
+                            ) {
+                                return true;
+                            }
+                        }
+                    }
+                    
+                    // Search in notes
+                    if (item.notes && item.notes.toLowerCase().includes(searchTerm)) {
+                        return true;
+                    }
+                    
+                    return false;
+                });
+            }
+            
+            renderItems(filteredItems);
+            updateItemCount();
+        }
+        
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            filteredItems = [...dataset.items];
+            renderItems(filteredItems);
+            updateItemCount();
+        }
+    </script>
+</body>
+</html>
