@@ -21,7 +21,7 @@
         "shape": "straight",
         "ottomans": "0",
         "deep": "false",
-        "orientation": "",
+        "orientation": "none",
         "anytable": ""
       },
       "notes": ""
@@ -31,7 +31,7 @@
       "image": "images/7f1517c9-99ca-47d0-b326-eaa7409eea65.png",
       "attribute_values": {
         "ID": "7f1517c9-99ca-47d0-b326-eaa7409eea65",
-        "orientation": "",
+        "orientation": "none",
         "deep": "false",
         "ottomans": "0",
         "shape": "straight",
@@ -57,7 +57,7 @@
       "image": "images/d3497daa-556d-48c5-ad59-37dc36332d17.png",
       "attribute_values": {
         "ID": "d3497daa-556d-48c5-ad59-37dc36332d17",
-        "orientation": "",
+        "orientation": "none",
         "deep": "false",
         "ottomans": "2",
         "shape": "straight",
@@ -83,7 +83,7 @@
       "image": "images/652bc256-8736-46d5-9344-b448c69b1be8.png",
       "attribute_values": {
         "ID": "652bc256-8736-46d5-9344-b448c69b1be8",
-        "orientation": "",
+        "orientation": "none",
         "deep": "false",
         "ottomans": "0",
         "shape": "straight",
@@ -174,7 +174,7 @@
       "image": "images/bc3b3629-05db-47d9-aa9d-41c0341d6085.png",
       "attribute_values": {
         "ID": "bc3b3629-05db-47d9-aa9d-41c0341d6085",
-        "orientation": "",
+        "orientation": "none",
         "deep": "true",
         "ottomans": "0",
         "shape": "straight",
@@ -187,7 +187,7 @@
       "image": "images/f77ff39a-62c9-40fc-9d12-9899e2d332a0.png",
       "attribute_values": {
         "ID": "f77ff39a-62c9-40fc-9d12-9899e2d332a0",
-        "orientation": "",
+        "orientation": "none",
         "deep": "true",
         "ottomans": "0",
         "shape": "straight",
@@ -213,7 +213,7 @@
       "image": "images/cca78197-1784-45f5-84c6-9caf3b90c5dd.png",
       "attribute_values": {
         "ID": "cca78197-1784-45f5-84c6-9caf3b90c5dd",
-        "orientation": "",
+        "orientation": "none",
         "deep": "true",
         "ottomans": "0",
         "shape": "straight",
@@ -226,7 +226,11 @@
       "image": "images/3f55e33b-d3f9-4c39-9812-9bff6d963699.png",
       "attribute_values": {
         "ID": "3f55e33b-d3f9-4c39-9812-9bff6d963699",
-        "anytable": ""
+        "anytable": "",
+        "orientation": "symmetrical",
+        "deep": "mixed",
+        "ottomans": "1",
+        "shape": "L"
       },
       "notes": ""
     },
@@ -235,7 +239,11 @@
       "image": "images/2ecfe71c-3699-4e7b-b2b8-f3f6ffd441ef.png",
       "attribute_values": {
         "ID": "2ecfe71c-3699-4e7b-b2b8-f3f6ffd441ef",
-        "anytable": ""
+        "anytable": "",
+        "orientation": "symmetrical",
+        "deep": "mixed",
+        "ottomans": "1",
+        "shape": "L"
       },
       "notes": ""
     },
@@ -244,7 +252,11 @@
       "image": "images/fc17b5fa-4bd9-43d3-9dd6-18384f033ac9.png",
       "attribute_values": {
         "ID": "fc17b5fa-4bd9-43d3-9dd6-18384f033ac9",
-        "anytable": ""
+        "anytable": "",
+        "orientation": "LHF",
+        "deep": "mixed",
+        "ottomans": "1",
+        "shape": "L"
       },
       "notes": ""
     },
@@ -253,7 +265,11 @@
       "image": "images/0e1364d1-90f1-4fc4-98ae-a8f8cab2d99a.png",
       "attribute_values": {
         "ID": "0e1364d1-90f1-4fc4-98ae-a8f8cab2d99a",
-        "anytable": ""
+        "anytable": "",
+        "orientation": "symmetrical",
+        "deep": "mixed",
+        "ottomans": "0",
+        "shape": "L"
       },
       "notes": ""
     },
@@ -262,7 +278,11 @@
       "image": "images/c94148b0-050d-40f5-92f1-a80cd6722279.png",
       "attribute_values": {
         "ID": "c94148b0-050d-40f5-92f1-a80cd6722279",
-        "anytable": ""
+        "anytable": "",
+        "orientation": "symmetrical",
+        "deep": "mixed",
+        "ottomans": "0",
+        "shape": "L"
       },
       "notes": ""
     },
@@ -271,7 +291,11 @@
       "image": "images/ea27e509-b2b8-4fed-99d6-e7f267fd09a9.png",
       "attribute_values": {
         "ID": "ea27e509-b2b8-4fed-99d6-e7f267fd09a9",
-        "anytable": ""
+        "anytable": "",
+        "orientation": "RHF",
+        "deep": "mixed",
+        "ottomans": "2",
+        "shape": "L"
       },
       "notes": ""
     },
@@ -280,7 +304,11 @@
       "image": "images/2c360981-204a-47a8-a8e2-be4bf6e15778.png",
       "attribute_values": {
         "ID": "2c360981-204a-47a8-a8e2-be4bf6e15778",
-        "anytable": ""
+        "anytable": "",
+        "orientation": "LHF",
+        "deep": "mixed",
+        "ottomans": "2",
+        "shape": "L"
       },
       "notes": ""
     },
@@ -288,7 +316,11 @@
       "id": "1063a9fb-297f-4b86-9c4b-85faf8684493",
       "image": "images/1063a9fb-297f-4b86-9c4b-85faf8684493.png",
       "attribute_values": {
-        "ID": "1063a9fb-297f-4b86-9c4b-85faf8684493"
+        "ID": "1063a9fb-297f-4b86-9c4b-85faf8684493",
+        "orientation": "none",
+        "deep": "false",
+        "ottomans": "2",
+        "shape": "C"
       },
       "notes": ""
     },
@@ -296,7 +328,11 @@
       "id": "30e5be2d-0b1b-4c51-926d-085c0d8b2dcf",
       "image": "images/30e5be2d-0b1b-4c51-926d-085c0d8b2dcf.png",
       "attribute_values": {
-        "ID": "30e5be2d-0b1b-4c51-926d-085c0d8b2dcf"
+        "ID": "30e5be2d-0b1b-4c51-926d-085c0d8b2dcf",
+        "orientation": "none",
+        "deep": "false",
+        "ottomans": "3",
+        "shape": "C"
       },
       "notes": ""
     }
@@ -306,10 +342,6 @@
       "name": "ID",
       "description": "",
       "readonly": true
-    },
-    {
-      "name": "anytable",
-      "description": ""
     },
     {
       "name": "orientation",
@@ -328,6 +360,6 @@
       "description": ""
     }
   ],
-  "last_updated": "2025-03-18T11:58:14.695796",
+  "last_updated": "2025-03-18T16:05:04.159Z",
   "_restartTimestamp": 1742310719040
 }
